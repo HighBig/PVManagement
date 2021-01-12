@@ -1,12 +1,11 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, message, Input, Drawer } from 'antd';
-import React, { useState, useRef } from 'react';
+import { Button, Divider, message, Drawer, Modal } from 'antd';
+import React, { useEffect, useState, useRef } from 'react';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ProDescriptions from '@ant-design/pro-descriptions';
-import CreateForm from './components/CreateForm';
-import UpdateForm from './components/UpdateForm';
-import { queryStation, updateStation, addStation, removeStation } from './service';
+import ModalForm from '@/components/ModalForm';
+import { queryCompanyOption, queryStation, updateStation, addStation, removeStation } from './service';
 
 /**
  * 新建电站
@@ -35,11 +34,7 @@ const handleUpdate = async (fields) => {
   const hide = message.loading('正在更新');
 
   try {
-    await updateStation({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
-    });
+    await updateStation({ ...fields });
     hide();
     message.success('修改成功');
     return true;
@@ -79,6 +74,14 @@ const Stations = () => {
   const actionRef = useRef();
   const [row, setRow] = useState();
   const [selectedRowsState, setSelectedRows] = useState([]);
+  const [companies, setCompanies] = useState([]);
+
+  useEffect(() => {
+    queryCompanyOption().then(result => {
+      setCompanies(result);
+    });
+  }, []);
+
   const columns = [
     {
       title: '电站名称',
@@ -109,35 +112,47 @@ const Stations = () => {
       },
     },
     {
-      title: '项目公司',
-      dataIndex: 'company',
+      title: '容量(kWp)',
+      dataIndex: 'capacity',
+      valueType: 'digit',
       search: false,
       formItemProps: {
         rules: [
           {
             required: true,
-            message: '项目公司为必填项',
+            message: '容量为必填项',
+          },
+        ],
+      },
+    },
+    {
+      title: '模式',
+      dataIndex: 'mode',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '模式为必选项',
           },
         ],
       },
       valueEnum: {
-        0: {
-          text: '关闭',
-          status: 'Default',
-        },
-        1: {
-          text: '运行中',
-          status: 'Processing',
-        },
-        2: {
-          text: '已上线',
-          status: 'Success',
-        },
-        3: {
-          text: '异常',
-          status: 'Error',
-        },
+        0: '自发自用',
+        1: '全额上网',
+      }
+    },
+    {
+      title: '项目公司',
+      dataIndex: 'company',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '项目公司为必选项',
+          },
+        ],
       },
+      valueEnum: companies
     },
     {
       title: '操作',
@@ -148,7 +163,11 @@ const Stations = () => {
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
-              setFormValues(record);
+              setFormValues({
+                ...record,
+                company: record.company.toString(),
+                mode: record.mode.toString()
+              });
             }}
           >
             修改
@@ -156,8 +175,13 @@ const Stations = () => {
           <Divider type="vertical" />
           <a 
             onClick={async () => {
-              await handleRemove([record]);
-              actionRef.current?.reloadAndRest?.();
+              Modal.confirm({
+                title: '确认删除电站？',
+                onOk: async () => {
+                  await handleRemove([record]);
+                  actionRef.current?.reloadAndRest?.();
+                }
+              });
             }}
           >
             删除
@@ -169,16 +193,13 @@ const Stations = () => {
   return (
     <PageContainer>
       <ProTable
-        headerTitle="查询表格"
+        headerTitle="电站"
         actionRef={actionRef}
-        rowKey="key"
-        search={{
-          labelWidth: 120,
-        }}
+        rowKey="id"
         toolBarRender={() => [
-          <Button type="primary" onClick={() => handleModalVisible(true)}>
+          <Button key="list" type="primary" onClick={() => handleModalVisible(true)}>
             <PlusOutlined /> 新建
-          </Button>,
+          </Button>
         ]}
         request={(params, sorter, filter) => queryStation({ ...params, sorter, filter })}
         columns={columns}
@@ -198,26 +219,31 @@ const Stations = () => {
               >
                 {selectedRowsState.length}
               </a>{' '}
-              项&nbsp;&nbsp;
-              <span>
-                服务调用次数总计 {selectedRowsState.reduce((pre, item) => pre + item.callNo, 0)} 万
-              </span>
+              项
             </div>
           }
         >
           <Button
             onClick={async () => {
-              await handleRemove(selectedRowsState);
-              setSelectedRows([]);
-              actionRef.current?.reloadAndRest?.();
+              Modal.confirm({
+                title: '确认删除电站？',
+                onOk: async () => {
+                  await handleRemove(selectedRowsState);
+                  setSelectedRows([]);
+                  actionRef.current?.reloadAndRest?.();
+                }
+              });
             }}
           >
             批量删除
           </Button>
-          <Button type="primary">批量审批</Button>
         </FooterToolbar>
       )}
-      <CreateForm onCancel={() => handleModalVisible(false)} modalVisible={createModalVisible}>
+      <ModalForm
+        title="新建电站"
+        onCancel={() => handleModalVisible(false)}
+        modalVisible={createModalVisible}
+      >
         <ProTable
           onSubmit={async (value) => {
             const success = await handleAdd(value);
@@ -230,32 +256,41 @@ const Stations = () => {
               }
             }
           }}
-          rowKey="key"
+          rowKey="id"
           type="form"
           columns={columns}
         />
-      </CreateForm>
+      </ModalForm>
       {formValues && Object.keys(formValues).length ? (
-        <UpdateForm
-          onSubmit={async (value) => {
-            const success = await handleUpdate(value);
-
-            if (success) {
-              handleUpdateModalVisible(false);
-              setFormValues({});
-
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
+        <ModalForm
+          title="修改电站"
           onCancel={() => {
             handleUpdateModalVisible(false);
             setFormValues({});
           }}
-          updateModalVisible={updateModalVisible}
-          values={formValues}
-        />
+          modalVisible={updateModalVisible}
+        >
+          <ProTable
+            onSubmit={async (value) => {
+              const success = await handleUpdate({ ...value, id: formValues.id });
+
+              if (success) {
+                handleUpdateModalVisible(false);
+                setFormValues({});
+
+                if (actionRef.current) {
+                  actionRef.current.reload();
+                }
+              }
+            }}
+            rowKey="id"
+            type="form"
+            form={{
+              initialValues: formValues
+            }}
+            columns={columns}
+          />
+        </ModalForm>
       ) : null}
 
       <Drawer
@@ -285,9 +320,3 @@ const Stations = () => {
 };
 
 export default Stations;
-
-/*
-export default connect(({ station }) => ({
-  currentUser: station.currentUser,
-}))(Stations);
-*/

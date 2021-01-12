@@ -1,21 +1,21 @@
 import { PlusOutlined } from '@ant-design/icons';
 import { Button, Divider, message, Drawer, Modal } from 'antd';
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ProDescriptions from '@ant-design/pro-descriptions';
 import ModalForm from '@/components/ModalForm';
-import { queryCompany, updateCompany, addCompany, removeCompany } from './service';
+import { queryStationOption, queryMeter, updateMeter, addMeter, removeMeter } from './service';
 
 /**
- * 新建项目公司
+ * 新建表计
  * @param fields
  */
 const handleAdd = async (fields) => {
   const hide = message.loading('正在创建');
 
   try {
-    await addCompany({ ...fields });
+    await addMeter({ ...fields });
     hide();
     message.success('创建成功');
     return true;
@@ -27,14 +27,14 @@ const handleAdd = async (fields) => {
 };
 
 /**
- * 修改项目公司
+ * 修改表计
  * @param fields
  */
 const handleUpdate = async (fields) => {
   const hide = message.loading('正在更新');
 
   try {
-    await updateCompany({ ...fields });
+    await updateMeter({ ...fields });
     hide();
     message.success('修改成功');
     return true;
@@ -46,7 +46,7 @@ const handleUpdate = async (fields) => {
 };
 
 /**
- *  删除项目公司
+ *  删除表计
  * @param selectedRows
  */
 const handleRemove = async (selectedRows) => {
@@ -54,7 +54,7 @@ const handleRemove = async (selectedRows) => {
   if (!selectedRows) return true;
 
   try {
-    await removeCompany({
+    await removeMeter({
       ids: selectedRows.map((row) => row.id),
     });
     hide();
@@ -67,22 +67,31 @@ const handleRemove = async (selectedRows) => {
   }
 };
 
-const Company = () => {
+const Meters = () => {
   const [createModalVisible, handleModalVisible] = useState(false);
   const [updateModalVisible, handleUpdateModalVisible] = useState(false);
   const [formValues, setFormValues] = useState({});
   const actionRef = useRef();
   const [row, setRow] = useState();
   const [selectedRowsState, setSelectedRows] = useState([]);
+  const [stations, setStations] = useState([]);
+
+  useEffect(() => {
+    queryStationOption().then(result => {
+      setStations(result);
+    });
+  }, []);
+
   const columns = [
     {
-      title: '名称',
+      title: '表计名称',
       dataIndex: 'name',
+      search: false,
       formItemProps: {
         rules: [
           {
             required: true,
-            message: '项目公司名称为必填项',
+            message: '表计名称为必填项',
           },
         ],
       },
@@ -91,17 +100,71 @@ const Company = () => {
       },
     },
     {
-      title: '简称',
-      dataIndex: 'short_name',
+      title: '编号',
+      dataIndex: 'number',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '编号为必填项',
+          },
+        ],
+      },
+    },
+    {
+      title: '电站',
+      dataIndex: 'station',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '电站为必选项',
+          },
+        ],
+      },
+      valueEnum: stations
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '类型为必选项',
+          },
+        ],
+      },
+      valueEnum: {
+        0: '光伏并网表',
+        1: '用户关口表'
+      }
+    },
+    {
+      title: 'CT',
+      dataIndex: 'ct',
       search: false,
       formItemProps: {
         rules: [
           {
             required: true,
-            message: '项目公司简称为必填项',
+            message: 'ct为必填项',
           },
         ],
-      }
+      },
+    },
+    {
+      title: 'PT',
+      dataIndex: 'pt',
+      search: false,
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: 'pt为必填项',
+          },
+        ],
+      },
     },
     {
       title: '操作',
@@ -112,7 +175,11 @@ const Company = () => {
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
-              setFormValues(record);
+              setFormValues({
+                ...record,
+                station: record.station.toString(),
+                type: record.type.toString()
+              });
             }}
           >
             修改
@@ -121,7 +188,7 @@ const Company = () => {
           <a 
             onClick={async () => {
               Modal.confirm({
-                title: '确认删除项目公司？',
+                title: '确认删除表计？',
                 onOk: async () => {
                   await handleRemove([record]);
                   actionRef.current?.reloadAndRest?.();
@@ -138,18 +205,15 @@ const Company = () => {
   return (
     <PageContainer>
       <ProTable
-        headerTitle="项目公司"
+        headerTitle="表计"
         actionRef={actionRef}
         rowKey="id"
-        search={{
-          labelWidth: 60,
-        }}
         toolBarRender={() => [
           <Button key="list" type="primary" onClick={() => handleModalVisible(true)}>
             <PlusOutlined /> 新建
-          </Button>,
+          </Button>
         ]}
-        request={(params, sorter, filter) => queryCompany({ ...params, sorter, filter })}
+        request={(params, sorter, filter) => queryMeter({ ...params, sorter, filter })}
         columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows),
@@ -174,7 +238,7 @@ const Company = () => {
           <Button
             onClick={async () => {
               Modal.confirm({
-                title: '确认删除项目公司？',
+                title: '确认删除表计？',
                 onOk: async () => {
                   await handleRemove(selectedRowsState);
                   setSelectedRows([]);
@@ -188,7 +252,7 @@ const Company = () => {
         </FooterToolbar>
       )}
       <ModalForm
-        title="新建项目公司"
+        title="新建表计"
         onCancel={() => handleModalVisible(false)}
         modalVisible={createModalVisible}
       >
@@ -211,7 +275,7 @@ const Company = () => {
       </ModalForm>
       {formValues && Object.keys(formValues).length ? (
         <ModalForm
-          title="修改项目公司"
+          title="修改表计"
           onCancel={() => {
             handleUpdateModalVisible(false);
             setFormValues({});
@@ -267,4 +331,4 @@ const Company = () => {
   );
 };
 
-export default Company;
+export default Meters;

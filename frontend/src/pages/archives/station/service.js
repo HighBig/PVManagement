@@ -1,62 +1,28 @@
 import request from 'umi-request';
 
-export async function queryCurrent() {
-  return request('/api/currentUser');
+export async function queryCompanyOption() {
+  return request('/api/company_option/');
 }
-export async function queryProvince() {
-  return request('/api/geographic/province');
-}
-export async function queryCity(province) {
-  return request(`/api/geographic/city/${province}`);
-}
-export async function query() {
-  return request('/api/users');
-}
-
-export async function queryRule(params) {
-  return request('/api/rule', {
-    params,
-  });
-}
-export async function removeRule(params) {
-  return request('/api/rule', {
-    method: 'POST',
-    data: { ...params, method: 'delete' },
-  });
-}
-export async function addRule(params) {
-  return request('/api/rule', {
-    method: 'POST',
-    data: { ...params, method: 'post' },
-  });
-}
-export async function updateRule(params) {
-  return request('/api/rule', {
-    method: 'POST',
-    data: { ...params, method: 'update' },
-  });
-}
-
 export async function queryStation(params) {
-  return request('/api/station', {
+  return request('/api/station/', {
     params,
   });
 }
 export async function removeStation(params) {
-  return request('/api/station', {
+  return request('/api/delete_station/', {
     method: 'POST',
-    data: { ...params, method: 'delete' },
+    data: { ...params },
   });
 }
 export async function addStation(params) {
-  return request('/api/station', {
+  return request('/api/add_station/', {
     method: 'POST',
-    data: { ...params, method: 'post' },
+    data: { ...params },
   });
 }
 export async function updateStation(params) {
-  return request('/api/station', {
+  return request('/api/update_station/', {
     method: 'POST',
-    data: { ...params, method: 'update' },
+    data: { ...params },
   });
 }

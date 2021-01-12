@@ -49,7 +49,13 @@ export default {
   'menu.editor.flow': '流程编辑器',
   'menu.editor.mind': '脑图编辑器',
   'menu.editor.koni': '拓扑编辑器',
+  'menu.report': '报表',
+  'menu.report.bill': '电费',
   'menu.archives': '档案',
   'menu.archives.company': '项目公司',
   'menu.archives.station': '电站',
+  'menu.archives.meter': '表计',
+  'menu.information': '信息填报',
+  'menu.information.electricity': '电量填报',
+  'menu.information.settlement': '月度结算',
 };

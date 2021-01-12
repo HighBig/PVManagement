@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
+import decimal
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -170,3 +171,6 @@ LOGGING = {
 }
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# TAX_RATE = decimal.Decimal(13)
+TAX_RATE = decimal.Decimal(13) / 100

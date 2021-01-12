@@ -21,35 +21,47 @@ export default [
         routes: [
           {
             path: '/',
-            redirect: '/welcome',
+            redirect: '/report/bill',
           },
           {
-            path: '/welcome',
-            name: 'welcome',
-            icon: 'smile',
-            component: './Welcome',
-          },
-          {
-            path: '/admin',
-            name: 'admin',
-            icon: 'crown',
-            component: './Admin',
-            authority: ['admin'],
+            name: 'report',
+            icon: 'table',
+            path: '/report',
             routes: [
               {
-                path: '/admin/sub-page',
-                name: 'sub-page',
-                icon: 'smile',
-                component: './Welcome',
-                authority: ['admin'],
+                path: '/',
+                redirect: '/report/bill',
               },
-            ],
+              {
+                name: 'bill',
+                icon: 'smile',
+                path: '/report/bill',
+                component: './report/bill',
+              },
+            ]
           },
           {
-            name: 'list.table-list',
-            icon: 'table',
-            path: '/list',
-            component: './ListTableList',
+            name: 'information',
+            icon: 'edit',
+            path: '/information',
+            routes: [
+              {
+                path: '/',
+                redirect: '/information/electricity',
+              },
+              {
+                name: 'electricity',
+                icon: 'smile',
+                path: '/information/electricity',
+                component: './information/electricity',
+              },
+              {
+                name: 'settlement',
+                icon: 'smile',
+                path: '/information/settlement',
+                component: './information/settlement',
+              },
+            ],
           },
           {
             name: 'archives',
@@ -71,6 +83,12 @@ export default [
                 icon: 'smile',
                 path: '/archives/station',
                 component: './archives/station',
+              },
+              {
+                name: 'meter',
+                icon: 'smile',
+                path: '/archives/meter',
+                component: './archives/meter',
               },
             ],
           },

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Modal } from 'antd';
 
-const UpdateForm = (props) => {
-  const { modalVisible, onCancel } = props;
+const ModalForm = (props) => {
+  const { modalVisible, onCancel, title } = props;
   return (
     <Modal
       destroyOnClose
-      title="修改项目公司"
+      maskClosable={false}
+      title={title}
       visible={modalVisible}
       onCancel={() => onCancel()}
       footer={null}
@@ -16,4 +17,4 @@ const UpdateForm = (props) => {
   );
 };
 
-export default UpdateForm;
+export default ModalForm;

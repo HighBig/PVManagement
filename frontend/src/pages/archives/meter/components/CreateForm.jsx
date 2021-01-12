@@ -6,7 +6,8 @@ const CreateForm = (props) => {
   return (
     <Modal
       destroyOnClose
-      title="新建规则"
+      maskClosable={false}
+      title="新建表计"
       visible={modalVisible}
       onCancel={() => onCancel()}
       footer={null}
