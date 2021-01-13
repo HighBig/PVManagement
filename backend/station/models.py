@@ -121,7 +121,6 @@ class Settlement(BaseModel, PrintableModel):
         elif type == 1:
             power = get_power(
                 company_meters, start_date, end_date, direction='reverse')
-            debug(power)
 
         if self.mode == 1:
             bill_dict['power'] = '尖 %s \n 峰 %s \n 平 %s \n 谷 %s' % \

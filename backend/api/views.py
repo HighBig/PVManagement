@@ -517,7 +517,7 @@ def bill_list_view(request):
     month = params.get('month')
     settlement_list = Settlement.objects\
                                 .filter(month=month + '-01')\
-                                .order_by('station')
+                                .order_by('station__company', 'station__mode', 'station')
 
     return json_response({
         'data': [
