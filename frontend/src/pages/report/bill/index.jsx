@@ -79,7 +79,7 @@ const Bill = () => {
   return (
     <PageContainer>
       <ProTable
-        headerTitle="电量"
+        headerTitle="电费"
         actionRef={actionRef}
         rowKey="id"
         params={{
