@@ -8,7 +8,6 @@ from common.debug_utils import debug
 
 class Company(BaseModel, PrintableModel):
     name = models.CharField(max_length=512)
-    short_name = models.CharField(max_length=256)
 
     def __str__(self):
         return self.name
@@ -16,7 +15,6 @@ class Company(BaseModel, PrintableModel):
 
 class Station(BaseModel, PrintableModel):
     name = models.CharField(max_length=512)
-    short_name = models.CharField(max_length=256)
     capacity = models.DecimalField(
         max_digits=16,
         decimal_places=4
@@ -153,7 +151,7 @@ class Settlement(BaseModel, PrintableModel):
 
 class Meter(BaseModel, PrintableModel):
     name = models.CharField(max_length=512)
-    number = models.CharField(max_length=512)
+    number = models.CharField(max_length=512, null=True, blank=True)
     station = models.ForeignKey(
         'station.Station',
         on_delete=models.CASCADE
@@ -163,6 +161,13 @@ class Meter(BaseModel, PrintableModel):
             (0, '光伏并网表'),
             (1, '用户关口表'),
         ))
+    direction = models.IntegerField(
+        choices=(
+            (0, '正向'),
+            (1, '反向'),
+        ),
+        default=0
+    )
     ct = models.IntegerField(default=1)
     pt = models.IntegerField(default=1)
 

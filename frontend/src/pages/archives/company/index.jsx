@@ -86,22 +86,6 @@ const Company = () => {
           },
         ],
       },
-      render: (dom, entity) => {
-        return <a onClick={() => setRow(entity)}>{dom}</a>;
-      },
-    },
-    {
-      title: '简称',
-      dataIndex: 'short_name',
-      search: false,
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '项目公司简称为必填项',
-          },
-        ],
-      }
     },
     {
       title: '操作',

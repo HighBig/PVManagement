@@ -91,7 +91,6 @@ def add_company_view(request):
     params = json.loads(request.body)
     company = Company()
     company.name = params.get('name')
-    company.short_name = params.get('short_name')
     company.save()
 
     return json_response(company.to_dict())
@@ -104,7 +103,6 @@ def update_company_view(request):
     id = params.get('id')
     company = Company.objects.get(pk=id)
     company.name = params.get('name')
-    company.short_name = params.get('short_name')
     company.save()
 
     return json_response(company.to_dict())
@@ -168,7 +166,6 @@ def add_station_view(request):
     company = Company.objects.get(id=company_id)
     station = Station()
     station.name = params.get('name')
-    station.short_name = params.get('short_name')
     station.capacity = params.get('capacity')
     station.mode = params.get('mode')
     station.company = company
@@ -186,7 +183,6 @@ def update_station_view(request):
     company = Company.objects.get(id=company_id)
     station = Station.objects.get(pk=id)
     station.name = params.get('name')
-    station.short_name = params.get('short_name')
     station.capacity = params.get('capacity')
     station.mode = params.get('mode')
     station.company = company
@@ -199,7 +195,6 @@ def update_station_view(request):
 @login_required
 def delete_station_view(request):
     params = json.loads(request.body)
-    debug(params)
     ids = params.get('ids', [])
     debug(ids)
     for id in ids:
@@ -225,15 +220,15 @@ def meter_list_view(request):
     name = params.get('name', None)
     if name:
         meter_list = meter_list.filter(name__icontains=name)
-    number = params.get('number', None)
-    if number:
-        meter_list = meter_list.filter(number__icontains=number)
     station_id = params.get('station', None)
     if station_id:
         meter_list = meter_list.filter(station__id=station_id)
     type = params.get('type', None)
     if type:
         meter_list = meter_list.filter(type=type)
+    direction = params.get('direction', None)
+    if direction:
+        meter_list = meter_list.filter(direction=direction)
 
     total = meter_list.count()
 
@@ -257,20 +252,20 @@ def meter_list_view(request):
 @login_required
 def add_meter_view(request):
     params = json.loads(request.body)
-    name = params.get('name')
-    number = params.get('number')
-    type = params.get('type')
-    ct = params.get('ct')
-    pt = params.get('pt')
     station_id = params.get('station')
     station = Station.objects.get(id=station_id)
     meter = Meter()
-    meter.name = name
-    meter.number = number
+    meter.name = params.get('name')
     meter.station = station
-    meter.type = type
-    meter.ct = ct
-    meter.pt = pt
+    meter.type = params.get('type')
+    meter.direction = params.get('direction')
+    meter.ct = params.get('ct')
+    meter.pt = params.get('pt')
+
+    number = params.get('number', None)
+    if number:
+        meter.number = number
+
     meter.save()
 
     return json_response(meter.to_dict())
@@ -281,20 +276,20 @@ def add_meter_view(request):
 def update_meter_view(request):
     params = json.loads(request.body)
     id = params.get('id')
-    name = params.get('name')
-    number = params.get('number')
-    type = params.get('type')
-    ct = params.get('ct')
-    pt = params.get('pt')
     station_id = params.get('station')
     station = Station.objects.get(id=station_id)
     meter = Meter.objects.get(pk=id)
-    meter.name = name
-    meter.number = number
+    meter.name = params.get('name')
     meter.station = station
-    meter.type = type
-    meter.ct = ct
-    meter.pt = pt
+    meter.type = params.get('type')
+    meter.direction = params.get('direction')
+    meter.ct = params.get('ct')
+    meter.pt = params.get('pt')
+
+    number = params.get('number', None)
+    if number:
+        meter.number = number
+
     meter.save()
 
     return json_response(meter.to_dict())
@@ -457,7 +452,6 @@ def settlement_list_view(request):
 @ login_required
 def add_settlement_view(request):
     params = json.loads(request.body)
-    debug(params)
     station_id = params.get('station')
     station = Station.objects.get(id=station_id)
 
@@ -487,7 +481,6 @@ def add_settlement_view(request):
 @ login_required
 def update_settlement_view(request):
     params = json.loads(request.body)
-    debug(params)
     id = params.get('id')
     settlement = Settlement.objects.get(pk=id)
     settlement.month = params.get('month') + '-01'
@@ -513,16 +506,35 @@ def update_settlement_view(request):
 @ login_required
 def bill_list_view(request):
     params = request.GET
-
     month = params.get('month')
     settlement_list = Settlement.objects\
                                 .filter(month=month + '-01')\
-                                .order_by('station__company', 'station__mode', 'station')
+                                .order_by('station__company',
+                                          'station__mode',
+                                          'station',
+                                          'type')
+
+    total = settlement_list.count()
+    next_index = 0
+    company_row_count = 0
+    data = []
+    for settlement in settlement_list:
+        next_index += 1
+        settlement_dict = settlement.to_bill_dict()
+
+        next_settlement = settlement_list[next_index] \
+            if total > next_index else None
+
+        debug(settlement, next_settlement)
+        if (next_settlement and
+                settlement.station.company.id ==
+                next_settlement.station.company.id):
+            company_row_count += 1
+
+        data.append(settlement_dict)
 
     return json_response({
-        'data': [
-            settlement.to_bill_dict() for settlement in settlement_list
-        ],
-        'total': settlement_list.count(),
+        'data': data,
+        'total': total,
         'success': True,
     })

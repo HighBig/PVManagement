@@ -99,19 +99,6 @@ const Stations = () => {
       },
     },
     {
-      title: '简称',
-      dataIndex: 'short_name',
-      search: false,
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '简称为必填项',
-          },
-        ],
-      },
-    },
-    {
       title: '容量(kWp)',
       dataIndex: 'capacity',
       valueType: 'digit',

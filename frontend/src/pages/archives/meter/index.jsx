@@ -102,14 +102,7 @@ const Meters = () => {
     {
       title: '编号',
       dataIndex: 'number',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '编号为必填项',
-          },
-        ],
-      },
+      search: false,
     },
     {
       title: '电站',
@@ -138,6 +131,22 @@ const Meters = () => {
       valueEnum: {
         0: '光伏并网表',
         1: '用户关口表'
+      }
+    },
+    {
+      title: ' 计量方向',
+      dataIndex: 'direction',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: '计量方向为必选项',
+          },
+        ],
+      },
+      valueEnum: {
+        0: '正向',
+        1: '反向'
       }
     },
     {
@@ -178,7 +187,8 @@ const Meters = () => {
               setFormValues({
                 ...record,
                 station: record.station.toString(),
-                type: record.type.toString()
+                type: record.type.toString(),
+                direction: record.direction.toString()
               });
             }}
           >

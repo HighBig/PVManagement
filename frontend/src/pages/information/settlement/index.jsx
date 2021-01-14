@@ -272,7 +272,7 @@ const SettlementList = (props) => {
                   key="list"
                   type="primary"
                 >
-                  <PlusOutlined /> 电量填报
+                  <PlusOutlined /> 新建结算
                 </Button>
               }
             />,
