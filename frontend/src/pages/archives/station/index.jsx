@@ -144,6 +144,7 @@ const Stations = () => {
     {
       title: '项目公司',
       dataIndex: 'company',
+      search: false,
       formItemProps: {
         rules: [
           {

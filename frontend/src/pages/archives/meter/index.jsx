@@ -120,6 +120,7 @@ const Meters = () => {
     {
       title: '电站',
       dataIndex: 'station',
+      search: false,
       formItemProps: {
         rules: [
           {
