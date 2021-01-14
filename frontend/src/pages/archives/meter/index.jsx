@@ -1,11 +1,17 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, message, Drawer, Modal } from 'antd';
+import { Button, Divider, message, Drawer, Modal, Select } from 'antd';
 import React, { useEffect, useState, useRef } from 'react';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ProDescriptions from '@ant-design/pro-descriptions';
 import ModalForm from '@/components/ModalForm';
-import { queryStationOption, queryMeter, updateMeter, addMeter, removeMeter } from './service';
+import {
+  queryStationSelectOption,
+  queryMeter,
+  updateMeter,
+  addMeter,
+  removeMeter
+} from './service';
 
 /**
  * 新建表计
@@ -74,11 +80,18 @@ const Meters = () => {
   const actionRef = useRef();
   const [row, setRow] = useState();
   const [selectedRowsState, setSelectedRows] = useState([]);
-  const [stations, setStations] = useState([]);
+  const [stationEnum, setStationEnum] = useState([]);
+  const [stationOptions, setStationOptions] = useState([]);
 
   useEffect(() => {
-    queryStationOption().then(result => {
-      setStations(result);
+    queryStationSelectOption().then(result => {
+      const { stations } = result;
+      setStationOptions(stations);
+      const stationEnumObj = {};
+      for (let i = 0; i < stations.length; i+=1) {
+        stationEnumObj[stations[i].value] = stations[i].label;
+      }
+      setStationEnum(stationEnumObj);
     });
   }, []);
 
@@ -115,7 +128,18 @@ const Meters = () => {
           },
         ],
       },
-      valueEnum: stations
+      valueEnum: stationEnum,
+      renderFormItem: () => (
+        <Select
+          placeholder="请选择电站"
+          showSearch
+          allowClear
+          filterOption={(input, option) =>
+            option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
+          options={stationOptions}
+        />
+      ),
     },
     {
       title: '类型',
@@ -136,7 +160,9 @@ const Meters = () => {
     {
       title: ' 计量方向',
       dataIndex: 'direction',
+      search: false,
       formItemProps: {
+        initialValue: '0',
         rules: [
           {
             required: true,
@@ -186,7 +212,6 @@ const Meters = () => {
               handleUpdateModalVisible(true);
               setFormValues({
                 ...record,
-                station: record.station.toString(),
                 type: record.type.toString(),
                 direction: record.direction.toString()
               });

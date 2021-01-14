@@ -1,11 +1,17 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, message, Drawer, Modal } from 'antd';
+import { Button, Divider, message, Drawer, Modal, Select } from 'antd';
 import React, { useEffect, useState, useRef } from 'react';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ProDescriptions from '@ant-design/pro-descriptions';
 import ModalForm from '@/components/ModalForm';
-import { queryCompanyOption, queryStation, updateStation, addStation, removeStation } from './service';
+import {
+  queryCompanySelectOption,
+  queryStation,
+  updateStation,
+  addStation,
+  removeStation
+} from './service';
 
 /**
  * 新建电站
@@ -74,11 +80,18 @@ const Stations = () => {
   const actionRef = useRef();
   const [row, setRow] = useState();
   const [selectedRowsState, setSelectedRows] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  const [companyEnum, setCompanyEnum] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
 
   useEffect(() => {
-    queryCompanyOption().then(result => {
-      setCompanies(result);
+    queryCompanySelectOption().then(result => {
+      const { companies } = result;
+      setCompanyOptions(companies);
+      const companyEnumObj = {};
+      for (let i = 0; i < companies.length; i+=1) {
+        companyEnumObj[companies[i].value] = companies[i].label;
+      }
+      setCompanyEnum(companyEnumObj);
     });
   }, []);
 
@@ -139,7 +152,18 @@ const Stations = () => {
           },
         ],
       },
-      valueEnum: companies
+      valueEnum: companyEnum,
+      renderFormItem: () => (
+        <Select
+          placeholder="请选择项目公司"
+          showSearch
+          allowClear
+          filterOption={(input, option) =>
+            option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
+          options={companyOptions}
+        />
+      ),
     },
     {
       title: '操作',
@@ -152,7 +176,6 @@ const Stations = () => {
               handleUpdateModalVisible(true);
               setFormValues({
                 ...record,
-                company: record.company.toString(),
                 mode: record.mode.toString()
               });
             }}

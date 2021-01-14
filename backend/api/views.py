@@ -121,12 +121,23 @@ def delete_company_view(request):
 
 @login_required
 def company_option_view(request):
-    company_list = Company.objects.all()
     response = {}
-    for company in company_list:
+    for company in Company.objects.all():
         response[company.id] = company.name
 
     return json_response(response)
+
+
+@login_required
+def company_select_option_view(request):
+    companies = []
+    for company in Company.objects.all():
+        companies.append({
+            'value': company.id,
+            'label': company.name
+        })
+
+    return json_response({'companies': companies})
 
 
 @login_required
