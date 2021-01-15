@@ -96,10 +96,35 @@ const renderForm = () => (
         }}
         rules={[{ required: true }]}
       />
+      <ProFormDigit
+        max={1}
+        name="discount"
+        label="折扣"
+      />
+      <ProFormDependency name={['type', 'mode']}>
+        {(values) => {
+          const { type, mode } = values;
+          if (type === "0" && mode === "1") {
+            return (
+              <ProFormDigit
+                max={1}
+                name="direct_purchase_percent"
+                label="直购电比例"
+              />
+            );
+          }
+          return null;
+        }}
+      </ProFormDependency>
     </ProForm.Group>
-    <ProFormDependency name={['mode']}>
+    <ProFormDependency name={['type', 'mode', 'direct_purchase_percent']}>
       {(values) => {
-        if (values.mode === "0") {
+        const {
+          type,
+          mode,
+          direct_purchase_percent: DirectPurchasePercent
+        } = values;
+        if (mode === "0") {
           return (
             <ProForm.Group>
               <ProFormDigit
@@ -109,30 +134,48 @@ const renderForm = () => (
               />
             </ProForm.Group>
           );
-        } if (values.mode === "1") {
+        }
+        if (mode === "1") {
           return (
-            <ProForm.Group>
-              <ProFormDigit
-                name="sharp_price"
-                label="尖电价"
-                rules={[{ required: true }]}
-              />
-              <ProFormDigit
-                name="peak_price"
-                label="峰电价"
-                rules={[{ required: true }]}
-              />
-              <ProFormDigit
-                name="flat_price"
-                label="平电价"
-                rules={[{ required: true }]}
-              />
-              <ProFormDigit
-                name="valley_price"
-                label="谷电价"
-                rules={[{ required: true }]}
-              />
-            </ProForm.Group>
+            <>
+              <ProForm.Group>
+                <ProFormDigit
+                  name="sharp_price"
+                  label="尖电价"
+                />
+                <ProFormDigit
+                  name="peak_price"
+                  label="峰电价"
+                />
+                <ProFormDigit
+                  name="flat_price"
+                  label="平电价"
+                />
+                <ProFormDigit
+                  name="valley_price"
+                  label="谷电价"
+                />
+              </ProForm.Group>
+              {type === "0" && DirectPurchasePercent ? (
+                <ProForm.Group>
+                  <ProFormDigit
+                    name="direct_purchase_sharp_price"
+                    label="直购电尖电价"
+                  />
+                  <ProFormDigit
+                    name="direct_purchase_peak_price"
+                    label="直购电峰电价"
+                  />
+                  <ProFormDigit
+                    name="direct_purchase_flat_price"
+                    label="直购电平电价"
+                  />
+                  <ProFormDigit
+                    name="direct_purchase_valley_price"
+                    label="直购电谷电价"
+                  />
+                </ProForm.Group>) : null}
+            </>
           );
         } 
         return null;
@@ -150,24 +193,20 @@ const SettlementList = (props) => {
   const columns = [
     {
       title: '月份',
-      key: 'month',
       dataIndex: 'month',
     },
     {
       title: '开始日期',
-      key: 'start_date',
       dataIndex: 'start_date',
       valueType: 'date',
     },
     {
       title: '结束日期',
-      key: 'end_date',
       dataIndex: 'end_date',
       valueType: 'date',
     },
     {
       title: '类型',
-      key: 'type',
       dataIndex: 'type',
       valueEnum: {
         0: '企业',
@@ -178,7 +217,6 @@ const SettlementList = (props) => {
     },
     {
       title: '电价类型',
-      key: 'mode',
       dataIndex: 'mode',
       valueEnum: {
         0: '单一电价',
@@ -186,33 +224,51 @@ const SettlementList = (props) => {
       }
     },
     {
+      title: '折扣',
+      dataIndex: 'discount',
+    },
+    {
+      title: '直购电比例',
+      dataIndex: 'direct_purchase_percent',
+    },
+    {
       title: '单一电价',
-      key: 'single_price',
       dataIndex: 'single_price',
     },
     {
       title: '尖电价',
-      key: 'sharp_price',
       dataIndex: 'sharp_price',
     },
     {
       title: '峰电价',
-      key: 'peak_price',
       dataIndex: 'peak_price',
     },
     {
       title: '平电价',
-      key: 'flat_price',
       dataIndex: 'flat_price',
     },
     {
       title: '谷电价',
-      key: 'valley_price',
       dataIndex: 'valley_price',
     },
     {
+      title: '直购电尖电价',
+      dataIndex: 'direct_purchase_sharp_price',
+    },
+    {
+      title: '直购电峰电价',
+      dataIndex: 'direct_purchase_peak_price',
+    },
+    {
+      title: '直购电平电价',
+      dataIndex: 'direct_purchase_flat_price',
+    },
+    {
+      title: '直购电谷电价',
+      dataIndex: 'direct_purchase_valley_price',
+    },
+    {
       title: '操作',
-      key: 'option',
       valueType: 'option',
       render: (_, record) => (
         <a

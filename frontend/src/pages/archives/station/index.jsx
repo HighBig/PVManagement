@@ -1,12 +1,12 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, message, Drawer, Modal, Select } from 'antd';
-import React, { useEffect, useState, useRef } from 'react';
+import { Button, Divider, message, Drawer, Modal } from 'antd';
+import React, { useState, useRef } from 'react';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ProDescriptions from '@ant-design/pro-descriptions';
 import ModalForm from '@/components/ModalForm';
 import {
-  queryCompanySelectOption,
+  queryCompanyOption,
   queryStation,
   updateStation,
   addStation,
@@ -80,21 +80,6 @@ const Stations = () => {
   const actionRef = useRef();
   const [row, setRow] = useState();
   const [selectedRowsState, setSelectedRows] = useState([]);
-  const [companyEnum, setCompanyEnum] = useState([]);
-  const [companyOptions, setCompanyOptions] = useState([]);
-
-  useEffect(() => {
-    queryCompanySelectOption().then(result => {
-      const { companies } = result;
-      setCompanyOptions(companies);
-      const companyEnumObj = {};
-      for (let i = 0; i < companies.length; i+=1) {
-        companyEnumObj[companies[i].value] = companies[i].label;
-      }
-      setCompanyEnum(companyEnumObj);
-    });
-  }, []);
-
   const columns = [
     {
       title: '电站名称',
@@ -128,6 +113,7 @@ const Stations = () => {
     {
       title: '模式',
       dataIndex: 'mode',
+      search: false,
       formItemProps: {
         rules: [
           {
@@ -144,7 +130,11 @@ const Stations = () => {
     {
       title: '项目公司',
       dataIndex: 'company',
-      search: false,
+      fieldProps: {
+        showSearch: true,
+        filterOption: (input, option) =>
+          option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      },
       formItemProps: {
         rules: [
           {
@@ -153,18 +143,11 @@ const Stations = () => {
           },
         ],
       },
-      valueEnum: companyEnum,
-      renderFormItem: () => (
-        <Select
-          placeholder="请选择项目公司"
-          showSearch
-          allowClear
-          filterOption={(input, option) =>
-            option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
-          options={companyOptions}
-        />
-      ),
+      valueType: 'select',
+      request: async () => {
+        const response = await queryCompanyOption();
+        return response.companies;
+      }
     },
     {
       title: '操作',

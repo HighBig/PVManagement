@@ -11,37 +11,43 @@ def get_power(meters, start_date, end_date, direction='forward'):
         end_electricity = meter.electricity_set\
                                .filter(date=end_date)\
                                .first()
+
+        if not start_electricity or not end_electricity:
+            continue
+
         magnification = meter.ct * meter.pt
-        if direction == 'forward':
-            total = \
+        if ((direction == 'forward' and meter.direction == 0) or
+                (direction == 'reverse' and meter.direction == 1)):
+            total += \
                 (end_electricity.forward_total -
                  start_electricity.forward_total) * magnification
-            sharp = \
+            sharp += \
                 (end_electricity.forward_sharp -
                  start_electricity.forward_sharp) * magnification
-            peak = \
+            peak += \
                 (end_electricity.forward_peak -
                  start_electricity.forward_peak) * magnification
-            flat = \
+            flat += \
                 (end_electricity.forward_flat -
                  start_electricity.forward_flat) * magnification
-            valley = \
+            valley += \
                 (end_electricity.forward_valley -
                  start_electricity.forward_valley) * magnification
-        else:
-            total = \
+        elif ((direction == 'reverse' and meter.direction == 0) or
+              (direction == 'forward' and meter.direction == 1)):
+            total += \
                 (end_electricity.reverse_total -
                  start_electricity.reverse_total) * magnification
-            sharp = \
+            sharp += \
                 (end_electricity.reverse_sharp -
                  start_electricity.reverse_sharp) * magnification
-            peak = \
+            peak += \
                 (end_electricity.reverse_peak -
                  start_electricity.reverse_peak) * magnification
-            flat = \
+            flat += \
                 (end_electricity.reverse_flat -
                  start_electricity.reverse_flat) * magnification
-            valley = \
+            valley += \
                 (end_electricity.reverse_valley -
                  start_electricity.reverse_valley) * magnification
 

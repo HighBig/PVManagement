@@ -15,7 +15,6 @@ def login_view(request):
     params = json.loads(request.body)
     username = params.get('userName')
     password = params.get('password')
-    debug(username, password)
     user = authenticate(request, username=username, password=password)
     debug(user)
     response = {}
@@ -47,7 +46,6 @@ def logout_view(request):
 def change_password_view(request):
     params = json.loads(request.body)
     password = params.get('password')
-    debug(password)
     user = request.user
     user.set_password(password)
     user.save()
@@ -121,15 +119,6 @@ def delete_company_view(request):
 
 @login_required
 def company_option_view(request):
-    response = {}
-    for company in Company.objects.all():
-        response[company.id] = company.name
-
-    return json_response(response)
-
-
-@login_required
-def company_select_option_view(request):
     companies = []
     for company in Company.objects.all():
         companies.append({
@@ -207,7 +196,6 @@ def update_station_view(request):
 def delete_station_view(request):
     params = json.loads(request.body)
     ids = params.get('ids', [])
-    debug(ids)
     for id in ids:
         Station.objects.get(pk=id).delete()
 
@@ -217,11 +205,14 @@ def delete_station_view(request):
 @login_required
 def station_option_view(request):
     station_list = Station.objects.all()
-    response = {}
+    stations = []
     for station in station_list:
-        response[station.id] = station.name
+        stations.append({
+            'value': station.id,
+            'label': station.name
+        })
 
-    return json_response(response)
+    return json_response({'stations': stations})
 
 
 @login_required
@@ -315,19 +306,6 @@ def delete_meter_view(request):
         Meter.objects.get(pk=id).delete()
 
     return json_response({})
-
-
-@login_required
-def station_select_option_view(request):
-    station_list = Station.objects.all()
-    stations = []
-    for station in station_list:
-        stations.append({
-            'value': station.id,
-            'label': station.name
-        })
-
-    return json_response({'stations': stations})
 
 
 @ login_required
@@ -472,16 +450,47 @@ def add_settlement_view(request):
     settlement.start_date = params.get('start_date')
     settlement.end_date = params.get('end_date')
     settlement.type = params.get('type')
+    settlement.mode = params.get('mode')
 
-    mode = params.get('mode')
-    settlement.mode = mode
-    if mode == '0':
-        settlement.single_price = params.get('single_price')
-    elif mode == '1':
-        settlement.sharp_price = params.get('sharp_price')
-        settlement.peak_price = params.get('peak_price')
-        settlement.flat_price = params.get('flat_price')
-        settlement.valley_price = params.get('valley_price')
+    single_price = params.get('single_price', None)
+    if single_price:
+        settlement.single_price = single_price
+    sharp_price = params.get('sharp_price', None)
+    if sharp_price:
+        settlement.sharp_price = sharp_price
+    peak_price = params.get('peak_price', None)
+    if peak_price:
+        settlement.peak_price = peak_price
+    flat_price = params.get('flat_price', None)
+    if flat_price:
+        settlement.flat_price = flat_price
+    valley_price = params.get('valley_price', None)
+    if valley_price:
+        settlement.valley_price = valley_price
+
+    discount = params.get('discount', None)
+    if discount:
+        settlement.discount = discount
+
+    # For direct purchase
+    direct_purchase_percent = params.get('direct_purchase_percent', None)
+    if direct_purchase_percent:
+        settlement.direct_purchase_percent = direct_purchase_percent
+    direct_purchase_sharp_price = params.get(
+        'direct_purchase_sharp_price', None)
+    if direct_purchase_sharp_price:
+        settlement.direct_purchase_sharp_price = direct_purchase_sharp_price
+    direct_purchase_peak_price = params.get('direct_purchase_peak_price', None)
+    if direct_purchase_peak_price:
+        settlement.direct_purchase_peak_price = direct_purchase_peak_price
+    direct_purchase_flat_price = params.get('direct_purchase_flat_price', None)
+    if direct_purchase_flat_price:
+        settlement.direct_purchase_flat_price = direct_purchase_flat_price
+    direct_purchase_valley_price = params.get(
+        'direct_purchase_valley_price', None)
+    if direct_purchase_valley_price:
+        settlement.direct_purchase_valley_price = direct_purchase_valley_price
+    # End for direct purchase
 
     settlement.save()
 
@@ -498,16 +507,47 @@ def update_settlement_view(request):
     settlement.start_date = params.get('start_date')
     settlement.end_date = params.get('end_date')
     settlement.type = params.get('type')
+    settlement.mode = params.get('mode')
 
-    mode = params.get('mode')
-    settlement.mode = mode
-    if mode == '0':
-        settlement.single_price = params.get('single_price')
-    elif mode == '1':
-        settlement.sharp_price = params.get('sharp_price')
-        settlement.peak_price = params.get('peak_price')
-        settlement.flat_price = params.get('flat_price')
-        settlement.valley_price = params.get('valley_price')
+    single_price = params.get('single_price', None)
+    if single_price:
+        settlement.single_price = single_price
+    sharp_price = params.get('sharp_price', None)
+    if sharp_price:
+        settlement.sharp_price = sharp_price
+    peak_price = params.get('peak_price', None)
+    if peak_price:
+        settlement.peak_price = peak_price
+    flat_price = params.get('flat_price', None)
+    if flat_price:
+        settlement.flat_price = flat_price
+    valley_price = params.get('valley_price', None)
+    if valley_price:
+        settlement.valley_price = valley_price
+
+    discount = params.get('discount', None)
+    if discount:
+        settlement.discount = discount
+
+    # For direct purchase
+    direct_purchase_percent = params.get('direct_purchase_percent', None)
+    if direct_purchase_percent:
+        settlement.direct_purchase_percent = direct_purchase_percent
+    direct_purchase_sharp_price = params.get(
+        'direct_purchase_sharp_price', None)
+    if direct_purchase_sharp_price:
+        settlement.direct_purchase_sharp_price = direct_purchase_sharp_price
+    direct_purchase_peak_price = params.get('direct_purchase_peak_price', None)
+    if direct_purchase_peak_price:
+        settlement.direct_purchase_peak_price = direct_purchase_peak_price
+    direct_purchase_flat_price = params.get('direct_purchase_flat_price', None)
+    if direct_purchase_flat_price:
+        settlement.direct_purchase_flat_price = direct_purchase_flat_price
+    direct_purchase_valley_price = params.get(
+        'direct_purchase_valley_price', None)
+    if direct_purchase_valley_price:
+        settlement.direct_purchase_valley_price = direct_purchase_valley_price
+    # End for direct purchase
 
     settlement.save()
 
@@ -536,7 +576,6 @@ def bill_list_view(request):
         next_settlement = settlement_list[next_index] \
             if total > next_index else None
 
-        debug(settlement, next_settlement)
         if (next_settlement and
                 settlement.station.company.id ==
                 next_settlement.station.company.id):

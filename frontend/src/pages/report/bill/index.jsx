@@ -1,5 +1,6 @@
-import { DatePicker } from 'antd';
-import React, { useEffect, useState, useRef } from 'react';
+import { Button, DatePicker } from 'antd';
+import React, { useState, useRef } from 'react';
+import { ExportOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import moment from 'moment';
@@ -8,23 +9,20 @@ import { queryCompanyOption, queryStationOption, queryBill  } from './service';
 const Bill = () => {
   const actionRef = useRef();
   const [month, setMonth] = useState(moment());
-  const [companies, setCompanies] = useState([]);
-  const [stations, setStations] = useState([]);
-
-  useEffect(() => {
-    queryCompanyOption().then(result => {
-      setCompanies(result);
-    });
-    queryStationOption().then(result => {
-      setStations(result);
-    });
-  }, []);
-
   const columns = [
     {
       title: '公司',
       dataIndex: 'company',
-      valueEnum: companies
+      valueType: 'select',
+      fieldProps: {
+        showSearch: true,
+        filterOption: (input, option) =>
+          option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      },
+      request: async () => {
+        const response = await queryCompanyOption();
+        return response.companies;
+      }
     },
     {
       title: '模式',
@@ -37,7 +35,16 @@ const Bill = () => {
     {
       title: '电站',
       dataIndex: 'station',
-      valueEnum: stations
+      valueType: 'select',
+      fieldProps: {
+        showSearch: true,
+        filterOption: (input, option) =>
+          option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      },
+      request: async () => {
+        const response = await queryStationOption();
+        return response.stations;
+      }
     },
     {
       title: '时间段',

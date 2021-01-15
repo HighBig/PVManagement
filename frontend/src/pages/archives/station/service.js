@@ -1,7 +1,7 @@
 import request from 'umi-request';
 
-export async function queryCompanySelectOption() {
-  return request('/api/company_select_option/');
+export async function queryCompanyOption() {
+  return request('/api/company_option/');
 }
 export async function queryStation(params) {
   return request('/api/station/', {

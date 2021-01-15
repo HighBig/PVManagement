@@ -1,12 +1,12 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, message, Drawer, Modal, Select } from 'antd';
-import React, { useEffect, useState, useRef } from 'react';
+import { Button, Divider, message, Drawer, Modal } from 'antd';
+import React, { useState, useRef } from 'react';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ProDescriptions from '@ant-design/pro-descriptions';
 import ModalForm from '@/components/ModalForm';
 import {
-  queryStationSelectOption,
+  queryStationOption,
   queryMeter,
   updateMeter,
   addMeter,
@@ -80,20 +80,6 @@ const Meters = () => {
   const actionRef = useRef();
   const [row, setRow] = useState();
   const [selectedRowsState, setSelectedRows] = useState([]);
-  const [stationEnum, setStationEnum] = useState([]);
-  const [stationOptions, setStationOptions] = useState([]);
-
-  useEffect(() => {
-    queryStationSelectOption().then(result => {
-      const { stations } = result;
-      setStationOptions(stations);
-      const stationEnumObj = {};
-      for (let i = 0; i < stations.length; i+=1) {
-        stationEnumObj[stations[i].value] = stations[i].label;
-      }
-      setStationEnum(stationEnumObj);
-    });
-  }, []);
 
   const columns = [
     {
@@ -120,7 +106,11 @@ const Meters = () => {
     {
       title: '电站',
       dataIndex: 'station',
-      search: false,
+      fieldProps: {
+        showSearch: true,
+        filterOption: (input, option) =>
+          option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      },
       formItemProps: {
         rules: [
           {
@@ -129,18 +119,11 @@ const Meters = () => {
           },
         ],
       },
-      valueEnum: stationEnum,
-      renderFormItem: () => (
-        <Select
-          placeholder="请选择电站"
-          showSearch
-          allowClear
-          filterOption={(input, option) =>
-            option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
-          options={stationOptions}
-        />
-      ),
+      valueType: 'select',
+      request: async () => {
+        const response = await queryStationOption();
+        return response.stations;
+      }
     },
     {
       title: '类型',

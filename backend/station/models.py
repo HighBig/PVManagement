@@ -56,6 +56,18 @@ class Settlement(BaseModel, PrintableModel):
             (1, '分时电价'),
         )
     )
+    discount = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=16,
+        decimal_places=4
+    )
+    direct_purchase_percent = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=16,
+        decimal_places=4
+    )
     single_price = models.DecimalField(
         blank=True,
         null=True,
@@ -86,6 +98,30 @@ class Settlement(BaseModel, PrintableModel):
         max_digits=16,
         decimal_places=4
     )
+    direct_purchase_sharp_price = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=16,
+        decimal_places=4
+    )
+    direct_purchase_peak_price = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=16,
+        decimal_places=4
+    )
+    direct_purchase_flat_price = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=16,
+        decimal_places=4
+    )
+    direct_purchase_valley_price = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=16,
+        decimal_places=4
+    )
 
     def to_dict(self):
         normalized_dict = super(Settlement, self).to_dict()
@@ -108,7 +144,7 @@ class Settlement(BaseModel, PrintableModel):
         company_meters = self.station.meter_set.filter(type=1)
         type = self.type
         power = get_power(pv_meters, start_date, end_date)
-        if type == 0:
+        if type == 0:  # 企业电量 = 光伏表正向 - 用户表反向
             reverse_power = get_power(
                 company_meters, start_date, end_date, direction='reverse')
             power['total'] -= reverse_power['total']
@@ -116,28 +152,51 @@ class Settlement(BaseModel, PrintableModel):
             power['peak'] -= reverse_power['peak']
             power['flat'] -= reverse_power['flat']
             power['valley'] -= reverse_power['valley']
-        elif type == 1:
+        elif type == 1:  # 上网电量 = 用户表反向
             power = get_power(
                 company_meters, start_date, end_date, direction='reverse')
 
-        if self.mode == 1:
-            bill_dict['power'] = '尖 %s \n 峰 %s \n 平 %s \n 谷 %s' % \
-                (decimal2string(power['sharp']),
-                 decimal2string(power['peak']),
-                 decimal2string(power['flat']),
-                 decimal2string(power['valley']))
-            bill_dict['price'] = '尖 %s \n 峰 %s \n 平 %s \n 谷 %s' % \
-                (bill_dict['sharp_price'], bill_dict['peak_price'],
-                 bill_dict['flat_price'], bill_dict['valley_price'])
-            bill = power['sharp'] * self.sharp_price + \
-                power['peak'] * self.peak_price + \
-                power['flat'] * self.flat_price + \
-                power['valley'] * self.valley_price
+        discount = self.discount if self.discount else 1
+        if self.mode == 1:  # 分时电价
+            sharp = power['sharp']
+            peak = power['peak']
+            flat = power['flat']
+            valley = power['valley']
+            sharp_price = self.sharp_price if self.sharp_price else 0
+            peak_price = self.peak_price if self.peak_price else 0
+            flat_price = self.flat_price if self.flat_price else 0
+            valley_price = self.valley_price if self.valley_price else 0
+            direct_purchase_percent = self.direct_purchase_percent
+            if direct_purchase_percent:
+                dp_sharp_price = self.direct_purchase_sharp_price\
+                    if self.direct_purchase_sharp_price else 0
+                dp_peak_price = self.direct_purchase_peak_price\
+                    if self.direct_purchase_peak_price else 0
+                dp_flat_price = self.direct_purchase_flat_price\
+                    if self.direct_purchase_flat_price else 0
+                dp_valley_price = self.direct_purchase_valley_price\
+                    if self.direct_purchase_valley_price else 0
+                bill = (sharp * direct_purchase_percent * dp_sharp_price +
+                        peak * direct_purchase_percent * dp_peak_price +
+                        flat * direct_purchase_percent * dp_flat_price +
+                        valley * direct_purchase_percent * dp_valley_price +
+                        sharp * (1 - direct_purchase_percent) * sharp_price +
+                        peak * (1 - direct_purchase_percent) * peak_price +
+                        flat * (1 - direct_purchase_percent) * flat_price +
+                        valley * (1 - direct_purchase_percent) * valley_price)\
+                    * discount
+            else:
+                bill = (sharp * sharp_price +
+                        peak * peak_price +
+                        flat * flat_price +
+                        valley * valley_price) * discount
+            bill_dict['price'] = decimal2string(bill / power['total'])
         else:
-            bill_dict['power'] = decimal2string(power['total'])
-            bill_dict['price'] = bill_dict['single_price']
-            bill = power['total'] * self.single_price
+            price = self.single_price * discount
+            bill_dict['price'] = decimal2string(price)
+            bill = power['total'] * price
 
+        bill_dict['power'] = decimal2string(power['total'])
         tax = bill * settings.TAX_RATE
         bill_dict['amount'] = decimal2string(bill - tax)
         bill_dict['tax'] = decimal2string(tax)
