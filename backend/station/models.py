@@ -25,6 +25,20 @@ class Station(BaseModel, PrintableModel):
             (1, '全额上网'),
         )
     )
+    is_self_consume = models.IntegerField(
+        choices=(
+            (0, '否'),
+            (1, '是'),
+        ),
+        default=0
+    )
+    is_self_consume_discount = models.IntegerField(
+        choices=(
+            (0, '否'),
+            (1, '是'),
+        ),
+        default=0
+    )
     company = models.ForeignKey(
         'station.Company',
         on_delete=models.CASCADE
@@ -144,6 +158,13 @@ class Settlement(BaseModel, PrintableModel):
         company_meters = self.station.meter_set.filter(type=1)
         type = self.type
         power = get_power(pv_meters, start_date, end_date)
+        consume_power = {
+            'total': 0,
+            'sharp': 0,
+            'peak': 0,
+            'flat': 0,
+            'valley': 0
+        }
         if type == 0:  # 企业电量 = 光伏表正向 - 用户表反向
             reverse_power = get_power(
                 company_meters, start_date, end_date, direction='reverse')
@@ -152,11 +173,15 @@ class Settlement(BaseModel, PrintableModel):
             power['peak'] -= reverse_power['peak']
             power['flat'] -= reverse_power['flat']
             power['valley'] -= reverse_power['valley']
+            if station.is_self_consume:
+                consume_power = get_power(
+                    pv_meters, start_date, end_date, direction='reverse')
         elif type == 1:  # 上网电量 = 用户表反向
             power = get_power(
                 company_meters, start_date, end_date, direction='reverse')
 
         discount = self.discount if self.discount else 1
+        consume_discount = discount if station.is_self_consume else 1
         if self.mode == 1:  # 分时电价
             sharp = power['sharp']
             peak = power['peak']
@@ -190,13 +215,20 @@ class Settlement(BaseModel, PrintableModel):
                         peak * peak_price +
                         flat * flat_price +
                         valley * valley_price) * discount
+            bill = bill - \
+                (consume_power['sharp'] * sharp_price +
+                 consume_power['peak'] * peak_price +
+                 consume_power['flat'] * flat_price +
+                 consume_power['valley'] * valley_price) * consume_discount
             bill_dict['price'] = decimal2string(bill / power['total'])
         else:
             price = self.single_price * discount
             bill_dict['price'] = decimal2string(price)
-            bill = power['total'] * price
+            bill = power['total'] * price - \
+                consume_power['total'] * self.single_price * consume_discount
 
-        bill_dict['power'] = decimal2string(power['total'])
+        bill_dict['power'] = decimal2string(
+            power['total'] - consume_power['total'])
         tax = bill * settings.TAX_RATE
         bill_dict['amount'] = decimal2string(bill - tax)
         bill_dict['tax'] = decimal2string(tax)

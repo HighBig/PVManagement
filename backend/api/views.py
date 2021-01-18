@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+import io
 import json
+from xlsxwriter.workbook import Workbook
 from common.debug_utils import debug
 from common.views_utils import json_response
 from station.models import Company, Station, Settlement, Meter, Electricity
@@ -168,6 +170,7 @@ def add_station_view(request):
     station.name = params.get('name')
     station.capacity = params.get('capacity')
     station.mode = params.get('mode')
+    station.is_self_consume = params.get('is_self_consume')
     station.company = company
     station.save()
 
@@ -185,6 +188,7 @@ def update_station_view(request):
     station.name = params.get('name')
     station.capacity = params.get('capacity')
     station.mode = params.get('mode')
+    station.is_self_consume = params.get('is_self_consume')
     station.company = company
     station.save()
 
@@ -308,7 +312,7 @@ def delete_meter_view(request):
     return json_response({})
 
 
-@ login_required
+@login_required
 def electricity_list_view(request):
     params = request.GET
     meter_id = params.get('meter')
@@ -340,8 +344,8 @@ def electricity_list_view(request):
     })
 
 
-@ csrf_exempt
-@ login_required
+@csrf_exempt
+@login_required
 def add_electricity_view(request):
     params = json.loads(request.body)
     date = params.get('date')
@@ -375,8 +379,8 @@ def add_electricity_view(request):
     return json_response(electricity.to_dict())
 
 
-@ csrf_exempt
-@ login_required
+@csrf_exempt
+@login_required
 def update_electricity_view(request):
     params = json.loads(request.body)
     date = params.get('date')
@@ -408,7 +412,7 @@ def update_electricity_view(request):
     return json_response(electricity.to_dict())
 
 
-@ login_required
+@login_required
 def settlement_list_view(request):
     params = request.GET
     station_id = params.get('station')
@@ -437,8 +441,8 @@ def settlement_list_view(request):
     })
 
 
-@ csrf_exempt
-@ login_required
+@csrf_exempt
+@login_required
 def add_settlement_view(request):
     params = json.loads(request.body)
     station_id = params.get('station')
@@ -497,8 +501,8 @@ def add_settlement_view(request):
     return json_response(settlement.to_dict())
 
 
-@ csrf_exempt
-@ login_required
+@csrf_exempt
+@login_required
 def update_settlement_view(request):
     params = json.loads(request.body)
     id = params.get('id')
@@ -554,7 +558,7 @@ def update_settlement_view(request):
     return json_response(settlement.to_dict())
 
 
-@ login_required
+@login_required
 def bill_list_view(request):
     params = request.GET
     month = params.get('month')
@@ -568,10 +572,14 @@ def bill_list_view(request):
     total = settlement_list.count()
     next_index = 0
     company_row_count = 0
+    company_list = []
     data = []
     for settlement in settlement_list:
         next_index += 1
         settlement_dict = settlement.to_bill_dict()
+        company = settlement_dict['company']
+        if company not in company_list:
+            company_list.append(company)
 
         next_settlement = settlement_list[next_index] \
             if total > next_index else None
@@ -588,3 +596,67 @@ def bill_list_view(request):
         'total': total,
         'success': True,
     })
+
+
+@login_required
+def export_bill_view(request):
+    params = request.GET
+    debug(params)
+    month = params.get('month')
+
+    return json_response({})
+
+    '''
+    output = io.BytesIO()
+
+    workbook = Workbook(output)
+
+    workbook.add_format({'text_wrap': True})
+
+    worksheet = workbook.add_worksheet()
+
+    worksheet.write(0, 0, '主题')
+    worksheet.write(0, 1, '描述')
+    worksheet.write(0, 2, '部门')
+    worksheet.write(0, 3, '提议者')
+    worksheet.write(0, 4, '时间')
+
+    row = 1
+    for idea in ideas:
+        worksheet.write(row, 0, idea.title)
+        worksheet.write(row, 1, idea.description)
+        worksheet.write(row, 2, idea.user.department.name)
+        worksheet.write(row, 3, idea.user.name)
+        worksheet.write(
+            row, 4, idea.created_datetime.strftime("%Y-%m-%d %H:%M:%S"))
+        row += 1
+
+    workbook.close()
+
+    output.seek(0)
+
+    filename = '金点子'
+
+    start_timestamp = request.GET.get('start', '')
+    if start_timestamp:
+        start_date = datetime.fromtimestamp(int(start_timestamp) / 1000)
+        filename += start_date.strftime("%Y%m%d")
+
+    end_timestamp = request.GET.get('end', '')
+    if end_timestamp:
+        end_date = datetime.fromtimestamp(int(end_timestamp) / 1000)
+        filename += '-' + end_date.strftime("%Y%m%d")
+
+    debug(filename)
+
+    response = HttpResponse(
+        output.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        charset='utf-8')
+    response['Content-Disposition'] = "attachment; filename=%s.xlsx" % escape_uri_path(
+        filename)
+
+    output.close()
+
+    return response
+    '''

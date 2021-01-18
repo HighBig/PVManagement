@@ -8,7 +8,7 @@ import ProCard from '@ant-design/pro-card';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 import {
-  queryStationSelectOption,
+  queryStationOption,
   queryMeter,
   queryElectricity,
   addElectricity,
@@ -315,7 +315,7 @@ const MeterList = (props) => {
   const { meter, onMeterChange  } = props;
   const actionRef = useRef();
   useEffect(() => {
-    queryStationSelectOption().then(result => {
+    queryStationOption().then(result => {
       setStations(result.stations);
     });
   }, []);

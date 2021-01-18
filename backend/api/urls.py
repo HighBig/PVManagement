@@ -81,4 +81,7 @@ urlpatterns = [
     url(r'^bill/$',
         views.bill_list_view,
         name='bill-list'),
+    url(r'^export_bill/$',
+        views.export_bill_view,
+        name='export-bill'),
 ]

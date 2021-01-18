@@ -150,6 +150,42 @@ const Stations = () => {
       }
     },
     {
+      title: '是否计算自耗电',
+      dataIndex: 'is_self_consume',
+      search: false,
+      formItemProps: {
+        initialValue: '0',
+        rules: [
+          {
+            required: true,
+            message: '是否计算自耗电为必选项',
+          },
+        ],
+      },
+      valueEnum: {
+        0: '否',
+        1: '是',
+      }
+    },
+    {
+      title: '自耗电是否享受折扣',
+      dataIndex: 'is_self_consume_discount',
+      search: false,
+      formItemProps: {
+        initialValue: '0',
+        rules: [
+          {
+            required: true,
+            message: '自耗电是否享受折扣为必选项',
+          },
+        ],
+      },
+      valueEnum: {
+        0: '否',
+        1: '是',
+      }
+    },
+    {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
@@ -160,7 +196,9 @@ const Stations = () => {
               handleUpdateModalVisible(true);
               setFormValues({
                 ...record,
-                mode: record.mode.toString()
+                mode: record.mode.toString(),
+                is_self_consume: record.is_self_consume.toString(),
+                is_self_consume_discount: record.is_self_consume_discount.toString()
               });
             }}
           >
