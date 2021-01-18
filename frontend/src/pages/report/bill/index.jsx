@@ -6,6 +6,10 @@ import ProTable from '@ant-design/pro-table';
 import moment from 'moment';
 import { queryCompanyOption, queryStationOption, queryBill  } from './service';
 
+const exportBill = (month) => {
+  window.location.href = `/api/export_bill/?month=${month}`;
+}
+
 const Bill = () => {
   const actionRef = useRef();
   const [month, setMonth] = useState(moment());
@@ -22,7 +26,7 @@ const Bill = () => {
       request: async () => {
         const response = await queryCompanyOption();
         return response.companies;
-      }
+      },
     },
     {
       title: '模式',
@@ -105,6 +109,16 @@ const Bill = () => {
               onChange={(cMonth) => setMonth(cMonth)}
             />
           ),
+          actions: [
+            <Button
+              key="out"
+              type="primary"
+              onClick={() => exportBill(month.format('YYYY-MM'))}
+            >
+              导出数据
+              <ExportOutlined />
+            </Button>,
+          ],
         }}
       />
     </PageContainer>

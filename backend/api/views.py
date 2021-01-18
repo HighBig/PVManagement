@@ -1,5 +1,7 @@
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http.response import HttpResponse
+from django.utils.encoding import escape_uri_path
 from django.views.decorators.csrf import csrf_exempt
 import io
 import json
@@ -603,10 +605,13 @@ def export_bill_view(request):
     params = request.GET
     debug(params)
     month = params.get('month')
+    settlement_list = Settlement.objects\
+                                .filter(month=month + '-01')\
+                                .order_by('station__company',
+                                          'station__mode',
+                                          'station',
+                                          'type')
 
-    return json_response({})
-
-    '''
     output = io.BytesIO()
 
     workbook = Workbook(output)
@@ -615,48 +620,46 @@ def export_bill_view(request):
 
     worksheet = workbook.add_worksheet()
 
-    worksheet.write(0, 0, '主题')
-    worksheet.write(0, 1, '描述')
-    worksheet.write(0, 2, '部门')
-    worksheet.write(0, 3, '提议者')
-    worksheet.write(0, 4, '时间')
+    worksheet.write(0, 0, '公司')
+    worksheet.write(0, 1, '模式')
+    worksheet.write(0, 2, '电站')
+    worksheet.write(0, 3, '时间段')
+    worksheet.write(0, 4, '类别')
+    worksheet.write(0, 5, '电量(kWh)')
+    worksheet.write(0, 6, '电价(元)')
+    worksheet.write(0, 7, '电费(元)')
+    worksheet.write(0, 8, '金额(元)')
+    worksheet.write(0, 9, '税额(元)')
 
     row = 1
-    for idea in ideas:
-        worksheet.write(row, 0, idea.title)
-        worksheet.write(row, 1, idea.description)
-        worksheet.write(row, 2, idea.user.department.name)
-        worksheet.write(row, 3, idea.user.name)
-        worksheet.write(
-            row, 4, idea.created_datetime.strftime("%Y-%m-%d %H:%M:%S"))
+    for settlement in settlement_list:
+        bill_dict = settlement.to_bill_dict()
+        worksheet.write(row, 0, settlement.station.company.name)
+        worksheet.write(row, 1, settlement.station.get_mode_display())
+        worksheet.write(row, 2, settlement.station.name)
+        worksheet.write(row, 3, bill_dict['period'])
+        worksheet.write(row, 4, settlement.get_type_display())
+        worksheet.write(row, 5, float(bill_dict['power']))
+        worksheet.write(row, 6, float(bill_dict['price']))
+        worksheet.write(row, 7, float(bill_dict['bill']))
+        worksheet.write(row, 8, float(bill_dict['amount']))
+        worksheet.write(row, 9, float(bill_dict['tax']))
         row += 1
 
     workbook.close()
 
     output.seek(0)
 
-    filename = '金点子'
-
-    start_timestamp = request.GET.get('start', '')
-    if start_timestamp:
-        start_date = datetime.fromtimestamp(int(start_timestamp) / 1000)
-        filename += start_date.strftime("%Y%m%d")
-
-    end_timestamp = request.GET.get('end', '')
-    if end_timestamp:
-        end_date = datetime.fromtimestamp(int(end_timestamp) / 1000)
-        filename += '-' + end_date.strftime("%Y%m%d")
-
-    debug(filename)
+    filename = '电费%s' % month
 
     response = HttpResponse(
         output.read(),
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        content_type='application/vnd.openxmlformats-officedocument'
+        '.spreadsheetml.sheet',
         charset='utf-8')
-    response['Content-Disposition'] = "attachment; filename=%s.xlsx" % escape_uri_path(
-        filename)
+    response['Content-Disposition'] = "attachment; filename=%s.xlsx" % \
+        escape_uri_path(filename)
 
     output.close()
 
     return response
-    '''
