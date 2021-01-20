@@ -173,6 +173,7 @@ def add_station_view(request):
     station.capacity = params.get('capacity')
     station.mode = params.get('mode')
     station.is_self_consume = params.get('is_self_consume')
+    station.is_self_consume_discount = params.get('is_self_consume_discount')
     station.company = company
     station.save()
 
@@ -191,6 +192,7 @@ def update_station_view(request):
     station.capacity = params.get('capacity')
     station.mode = params.get('mode')
     station.is_self_consume = params.get('is_self_consume')
+    station.is_self_consume_discount = params.get('is_self_consume_discount')
     station.company = company
     station.save()
 
