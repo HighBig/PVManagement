@@ -72,22 +72,18 @@ const renderForm = () => (
       <ProFormDigit
         name="forward_sharp"
         label="正向尖"
-        rules={[{ required: true }]}
       />
       <ProFormDigit
         name="forward_peak"
         label="正向峰"
-        rules={[{ required: true }]}
       />
       <ProFormDigit
         name="forward_flat"
         label="正向平"
-        rules={[{ required: true }]}
       />
       <ProFormDigit
         name="forward_valley"
         label="正向谷"
-        rules={[{ required: true }]}
       />
     </ProForm.Group>
     <ProForm.Group>
@@ -99,22 +95,18 @@ const renderForm = () => (
       <ProFormDigit
         name="reverse_sharp"
         label="反向尖"
-        rules={[{ required: true }]}
       />
       <ProFormDigit
         name="reverse_peak"
         label="反向峰"
-        rules={[{ required: true }]}
       />
       <ProFormDigit
         name="reverse_flat"
         label="反向平"
-        rules={[{ required: true }]}
       />
       <ProFormDigit
         name="reverse_valley"
         label="反向谷"
-        rules={[{ required: true }]}
       />
     </ProForm.Group>
   </>

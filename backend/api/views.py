@@ -351,31 +351,39 @@ def electricity_list_view(request):
 def add_electricity_view(request):
     params = json.loads(request.body)
     date = params.get('date')
-    forward_total = params.get('forward_total')
-    forward_sharp = params.get('forward_sharp')
-    forward_peak = params.get('forward_peak')
-    forward_flat = params.get('forward_flat')
-    forward_valley = params.get('forward_valley')
-    reverse_total = params.get('reverse_total')
-    reverse_sharp = params.get('reverse_sharp')
-    reverse_peak = params.get('reverse_peak')
-    reverse_flat = params.get('reverse_flat')
-    reverse_valley = params.get('reverse_valley')
     meter_id = params.get('meter')
     meter = Meter.objects.get(id=meter_id)
     electricity = Electricity()
     electricity.date = date
     electricity.meter = meter
-    electricity.forward_total = forward_total
-    electricity.forward_sharp = forward_sharp
-    electricity.forward_peak = forward_peak
-    electricity.forward_flat = forward_flat
-    electricity.forward_valley = forward_valley
-    electricity.reverse_total = reverse_total
-    electricity.reverse_sharp = reverse_sharp
-    electricity.reverse_peak = reverse_peak
-    electricity.reverse_flat = reverse_flat
-    electricity.reverse_valley = reverse_valley
+    electricity.forward_total = params.get('forward_total')
+    electricity.reverse_total = params.get('reverse_total')
+
+    forward_sharp = params.get('forward_sharp', None)
+    if forward_sharp:
+        electricity.forward_sharp = forward_sharp
+    forward_peak = params.get('forward_peak', None)
+    if forward_peak:
+        electricity.forward_peak = forward_peak
+    forward_flat = params.get('forward_flat', None)
+    if forward_flat:
+        electricity.forward_flat = forward_flat
+    forward_valley = params.get('forward_valley', None)
+    if forward_valley:
+        electricity.forward_valley = forward_valley
+    reverse_sharp = params.get('reverse_sharp', None)
+    if reverse_sharp:
+        electricity.reverse_sharp = reverse_sharp
+    reverse_peak = params.get('reverse_peak', None)
+    if reverse_peak:
+        electricity.reverse_peak = reverse_peak
+    reverse_flat = params.get('reverse_flat', None)
+    if reverse_flat:
+        electricity.reverse_flat = reverse_flat
+    reverse_valley = params.get('reverse_valley', None)
+    if reverse_valley:
+        electricity.reverse_valley = reverse_valley
+
     electricity.save()
 
     return json_response(electricity.to_dict())
@@ -386,29 +394,37 @@ def add_electricity_view(request):
 def update_electricity_view(request):
     params = json.loads(request.body)
     date = params.get('date')
-    forward_total = params.get('forward_total')
-    forward_sharp = params.get('forward_sharp')
-    forward_peak = params.get('forward_peak')
-    forward_flat = params.get('forward_flat')
-    forward_valley = params.get('forward_valley')
-    reverse_total = params.get('reverse_total')
-    reverse_sharp = params.get('reverse_sharp')
-    reverse_peak = params.get('reverse_peak')
-    reverse_flat = params.get('reverse_flat')
-    reverse_valley = params.get('reverse_valley')
     id = params.get('id')
     electricity = Electricity.objects.get(pk=id)
     electricity.date = date
-    electricity.forward_total = forward_total
-    electricity.forward_sharp = forward_sharp
-    electricity.forward_peak = forward_peak
-    electricity.forward_flat = forward_flat
-    electricity.forward_valley = forward_valley
-    electricity.reverse_total = reverse_total
-    electricity.reverse_sharp = reverse_sharp
-    electricity.reverse_peak = reverse_peak
-    electricity.reverse_flat = reverse_flat
-    electricity.reverse_valley = reverse_valley
+    electricity.forward_total = params.get('forward_total')
+    electricity.reverse_total = params.get('reverse_total')
+
+    forward_sharp = params.get('forward_sharp', None)
+    if forward_sharp:
+        electricity.forward_sharp = forward_sharp
+    forward_peak = params.get('forward_peak', None)
+    if forward_peak:
+        electricity.forward_peak = forward_peak
+    forward_flat = params.get('forward_flat', None)
+    if forward_flat:
+        electricity.forward_flat = forward_flat
+    forward_valley = params.get('forward_valley', None)
+    if forward_valley:
+        electricity.forward_valley = forward_valley
+    reverse_sharp = params.get('reverse_sharp', None)
+    if reverse_sharp:
+        electricity.reverse_sharp = reverse_sharp
+    reverse_peak = params.get('reverse_peak', None)
+    if reverse_peak:
+        electricity.reverse_peak = reverse_peak
+    reverse_flat = params.get('reverse_flat', None)
+    if reverse_flat:
+        electricity.reverse_flat = reverse_flat
+    reverse_valley = params.get('reverse_valley', None)
+    if reverse_valley:
+        electricity.reverse_valley = reverse_valley
+
     electricity.save()
 
     return json_response(electricity.to_dict())

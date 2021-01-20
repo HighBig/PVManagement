@@ -277,18 +277,26 @@ class Electricity(BaseModel, PrintableModel):
         decimal_places=4
     )
     forward_sharp = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
     forward_peak = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
     forward_flat = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
     forward_valley = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
@@ -297,18 +305,26 @@ class Electricity(BaseModel, PrintableModel):
         decimal_places=4
     )
     reverse_sharp = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
     reverse_peak = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
     reverse_flat = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
     reverse_valley = models.DecimalField(
+        blank=True,
+        null=True,
         max_digits=16,
         decimal_places=4
     )
