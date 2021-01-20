@@ -27,6 +27,13 @@ const Bill = () => {
         const response = await queryCompanyOption();
         return response.companies;
       },
+      render: (value, row) => {
+        const { company_row_span: rowSpan } = row;
+        return {
+          children: value,
+          props: { rowSpan },
+        };
+      },
     },
     {
       title: '模式',
@@ -34,6 +41,13 @@ const Bill = () => {
       valueEnum: {
         0: '自发自用',
         1: '全额上网',
+      },
+      render: (value, row) => {
+        const { mode_row_span: rowSpan } = row;
+        return {
+          children: value,
+          props: { rowSpan },
+        };
       },
     },
     {
@@ -48,7 +62,14 @@ const Bill = () => {
       request: async () => {
         const response = await queryStationOption();
         return response.stations;
-      }
+      },
+      render: (value, row) => {
+        const { station_row_span: rowSpan } = row;
+        return {
+          children: value,
+          props: { rowSpan },
+        };
+      },
     },
     {
       title: '时间段',

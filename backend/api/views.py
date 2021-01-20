@@ -571,31 +571,43 @@ def bill_list_view(request):
                                           'station',
                                           'type')
 
-    total = settlement_list.count()
-    next_index = 0
-    company_row_count = 0
-    company_list = []
+    company_id_list = []
+    mode_list = []
+    station_id_list = []
     data = []
     for settlement in settlement_list:
-        next_index += 1
+        company_id = settlement.station.company.id
+        company_row_span = 0
+        if company_id not in company_id_list:
+            mode_list = []
+            company_id_list.append(company_id)
+            company_row_span = settlement_list.filter(
+                station__company__id=company_id).count()
+
+        mode = settlement.station.mode
+        mode_row_span = 0
+        if mode not in mode_list:
+            mode_list.append(mode)
+            mode_row_span = settlement_list.filter(
+                station__company__id=company_id,
+                station__mode=mode).count()
+
+        station_id = settlement.station.id
+        station_row_span = 0
+        if station_id not in station_id_list:
+            station_id_list.append(station_id)
+            station_row_span = settlement_list.filter(
+                station__id=station_id).count()
+
         settlement_dict = settlement.to_bill_dict()
-        company = settlement_dict['company']
-        if company not in company_list:
-            company_list.append(company)
-
-        next_settlement = settlement_list[next_index] \
-            if total > next_index else None
-
-        if (next_settlement and
-                settlement.station.company.id ==
-                next_settlement.station.company.id):
-            company_row_count += 1
-
+        settlement_dict['company_row_span'] = company_row_span
+        settlement_dict['mode_row_span'] = mode_row_span
+        settlement_dict['station_row_span'] = station_row_span
         data.append(settlement_dict)
 
     return json_response({
         'data': data,
-        'total': total,
+        'total': settlement_list.count(),
         'success': True,
     })
 
@@ -603,7 +615,6 @@ def bill_list_view(request):
 @login_required
 def export_bill_view(request):
     params = request.GET
-    debug(params)
     month = params.get('month')
     settlement_list = Settlement.objects\
                                 .filter(month=month + '-01')\
@@ -613,13 +624,8 @@ def export_bill_view(request):
                                           'type')
 
     output = io.BytesIO()
-
     workbook = Workbook(output)
-
-    workbook.add_format({'text_wrap': True})
-
     worksheet = workbook.add_worksheet()
-
     worksheet.write(0, 0, '公司')
     worksheet.write(0, 1, '模式')
     worksheet.write(0, 2, '电站')
@@ -631,12 +637,32 @@ def export_bill_view(request):
     worksheet.write(0, 8, '金额(元)')
     worksheet.write(0, 9, '税额(元)')
 
+    merge_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'text_wrap': True,
+    })
+
+    company_id_list = []
+    mode_list = []
+    station_id_list = []
+    company_start_index = 2
+    mode_start_index = 2
+    station_start_index = 2
+    last_company_name = None
+    last_mode_label = None
+    last_station_name = None
+    total = settlement_list.count()
     row = 1
     for settlement in settlement_list:
         bill_dict = settlement.to_bill_dict()
-        worksheet.write(row, 0, settlement.station.company.name)
-        worksheet.write(row, 1, settlement.station.get_mode_display())
-        worksheet.write(row, 2, settlement.station.name)
+        company_name = settlement.station.company.name
+        mode_label = settlement.station.get_mode_display()
+        station_name = settlement.station.name
+
+        worksheet.write(row, 0, company_name)
+        worksheet.write(row, 1, mode_label)
+        worksheet.write(row, 2, station_name)
         worksheet.write(row, 3, bill_dict['period'])
         worksheet.write(row, 4, settlement.get_type_display())
         worksheet.write(row, 5, float(bill_dict['power']))
@@ -644,10 +670,58 @@ def export_bill_view(request):
         worksheet.write(row, 7, float(bill_dict['bill']))
         worksheet.write(row, 8, float(bill_dict['amount']))
         worksheet.write(row, 9, float(bill_dict['tax']))
+
+        company_id = settlement.station.company.id
+        mode = settlement.station.mode
+        station_id = settlement.station.id
+        if row == 1:
+            last_company_name = company_name
+            last_mode_label = mode_label
+            last_station_name = station_name
+            company_id_list.append(company_id)
+            mode_list.append(mode)
+            station_id_list.append(station_id)
+        else:
+            if company_id not in company_id_list or row == total:
+                mode_list = []
+                company_id_list.append(company_id)
+                if row > company_start_index:
+                    worksheet.merge_range(
+                        'A%s:A%s' % (company_start_index,
+                                     row + 1 if row == total else row),
+                        last_company_name,
+                        merge_format)
+
+                company_start_index = row + 1
+                last_company_name = company_name
+
+            if mode not in mode_list or row == total:
+                mode_list.append(mode)
+                if row > mode_start_index:
+                    worksheet.merge_range(
+                        'B%s:B%s' % (mode_start_index,
+                                     row + 1 if row == total else row),
+                        last_mode_label,
+                        merge_format)
+
+                mode_start_index = row + 1
+                last_mode_label = mode_label
+
+            if station_id not in station_id_list or row == total:
+                station_id_list.append(station_id)
+                if row > station_start_index:
+                    worksheet.merge_range(
+                        'C%s:C%s' % (station_start_index,
+                                     row + 1 if row == total else row),
+                        last_station_name,
+                        merge_format)
+
+                station_start_index = row + 1
+                last_station_name = station_name
+
         row += 1
 
     workbook.close()
-
     output.seek(0)
 
     filename = '电费%s' % month
